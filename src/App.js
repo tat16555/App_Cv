@@ -13,7 +13,7 @@ function App() {
   const handleAddProduct = (event) => {
     event.preventDefault();
     if (!productName || !price || !quantity) {
-      alert("Please fill in all fields with valid data.");
+      alert(language === 'th' ? "โปรดกรอกข้อมูลให้ครบถ้วน" : "Please fill in all fields with valid data.");
       return;
     }
     const newProduct = {
@@ -32,17 +32,17 @@ function App() {
 
   const calculateCV = () => {
     if (products.length < 2) {
-      alert("Please add at least 2 products to compare.");
+      alert(language === 'th' ? "โปรดเพิ่มสินค้าอย่างน้อย 2 รายการเพื่อเปรียบเทียบ" : "Please add at least 2 products to compare.");
       return;
     }
-    const prices = products.map(product => product.price);
-    const meanPrice = prices.reduce((acc, val) => acc + val, 0) / prices.length;
-    const variance = prices.map(price => Math.pow(price - meanPrice, 2)).reduce((acc, val) => acc + val, 0);
-    const standardDeviation = Math.sqrt(variance);
-    const coefficientOfVariation = (standardDeviation / meanPrice) * 100;
-    const lowestCVProduct = products.reduce((acc, val) => (val.price / val.quantity) < (acc.price / acc.quantity) ? val : acc);
-    setCvResult(`Coefficient of Variation (CV%): ${coefficientOfVariation.toFixed(2)}%\nBest product in terms of CV: ${lowestCVProduct.name}`);
-    setShowBestCVResult(true); // Show best CV result
+    const cvResults = products.map(product => {
+      const cv = (product.price / product.quantity) * 100; // คำนวณ CV จากสัดส่วนระหว่างราคาและปริมาณ
+      return { name: product.name, cv };
+    });
+
+    const lowestCVProduct = cvResults.reduce((acc, val) => val.cv < acc.cv ? val : acc);
+    setCvResult(`${language === 'th' ? 'อัตราส่วนความแปรปรวน (CV%):' : 'Coefficient of Variation (CV%):'} ${lowestCVProduct.cv.toFixed(2)}%\n${language === 'th' ? 'สินค้าที่ดีที่สุดตาม CV:' : 'Best product in terms of CV:'} ${lowestCVProduct.name}`);
+    setShowBestCVResult(true); // แสดงผลลัพธ์ CV ที่ดีที่สุด
   };
 
   const handleClearProducts = () => {
@@ -80,14 +80,18 @@ function App() {
           <div className={`product-card fade-in ${showBestCVResult && product.name === cvResult.split(': ')[1] ? 'best-cv-result' : ''}`} key={index}>
             <h3>{product.name}</h3>
             <p>{language === 'th' ? 'ราคา' : 'Price'}: ${product.price.toFixed(2)}, {language === 'th' ? 'จำนวน' : 'Quantity'}: {product.quantity}</p>
+            {cvResult && <p>{language === 'th' ? 'Coefficient of Variation (CV%):' : 'Coefficient of Variation (CV%):'} {(product.price / product.quantity * 100).toFixed(2)}%</p>}
           </div>
         ))}
       </div>
+
       <button className="btn btn-success mt-3" onClick={calculateCV}>{language === 'th' ? 'คำนวณ CV' : 'Calculate CV'}</button>
       <button className="btn btn-danger mt-3 ms-2" onClick={handleClearProducts}>{language === 'th' ? 'ล้างสินค้า' : 'Clear Products'}</button>
-      {cvResult && <div id="result" className="mt-3">
-        <p className="fw-bold">{cvResult}</p>
-      </div>}
+      {cvResult && (
+        <div id="result" className="mt-3 result-box">
+          <p className="fw-bold">{language === 'th' ? 'อัตราส่วนความแปรปรวน (CV%):' : 'Coefficient of Variation (CV%):'} {cvResult}</p>
+        </div>
+      )}
     </div>
   );
 }
